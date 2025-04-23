@@ -62,7 +62,7 @@ const HeroSection: React.FC = () => {
                 whileHover={{ scale: 1.05 }}
                 whileTap={{ scale: 0.98 }}
               >
-                <Link href="youtube.com" target="_blank">
+                <Link href="https://youtu.be/-PdmCWNLCEs" target="_blank">
                   <Button
                     size="lg"
                     variant="secondary"

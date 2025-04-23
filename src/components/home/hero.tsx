@@ -5,6 +5,7 @@ import { motion, useInView } from "motion/react";
 import { Button } from "@/components/ui/button";
 import { ArrowRight, NotebookPen, PencilLine } from "lucide-react";
 import { ContainerTextFlip } from "@/components/ui/container-text-flip";
+import Link from "next/link";
 
 const HeroSection: React.FC = () => {
   const sectionRef = useRef<HTMLDivElement>(null);
@@ -49,21 +50,28 @@ const HeroSection: React.FC = () => {
                 whileHover={{ scale: 1.05 }}
                 whileTap={{ scale: 0.98 }}
               >
-                <Button size="lg" className="font-medium px-6">
-                  Start Writing <ArrowRight className="ml-2 h-4 w-4" />
-                </Button>
+                <Link href="/notes">
+                  <Button size="lg" className="font-medium px-6" asChild>
+                    <div className="flex items-center">
+                      Start Writing <ArrowRight className="ml-2 h-4 w-4" />
+                    </div>
+                  </Button>
+                </Link>
               </motion.div>
               <motion.div
                 whileHover={{ scale: 1.05 }}
                 whileTap={{ scale: 0.98 }}
               >
-                <Button
-                  size="lg"
-                  variant="secondary"
-                  className="font-medium px-6"
-                >
-                  Try a Live Demo
-                </Button>
+                <Link href="youtube.com" target="_blank">
+                  <Button
+                    size="lg"
+                    variant="secondary"
+                    className="font-medium px-6"
+                    asChild
+                  >
+                    <div>Try a Live Demo</div>
+                  </Button>
+                </Link>
               </motion.div>
             </motion.div>
           </motion.div>

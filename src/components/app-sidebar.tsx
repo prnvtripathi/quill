@@ -1,24 +1,14 @@
 "use client";
 
-import React, { useState, useEffect, Suspense } from "react";
-import { ChevronsLeft } from "lucide-react";
+import React, { Suspense } from "react";
 import { NavChats, NavChatsSkeleton } from "./nav-chats";
-import { NavUser, NavUserSkeleton } from "@/components/nav-user";
+import { NavUser } from "@/components/nav-user";
 import {
   Sidebar,
   SidebarContent,
   SidebarFooter,
-  SidebarHeader,
   SidebarRail,
-  SidebarMenu,
-  SidebarMenuButton,
-  SidebarMenuItem,
-  useSidebar,
 } from "@/components/ui/sidebar";
-import Image from "next/image";
-import { Separator } from "./ui/separator";
-import { motion, AnimatePresence } from "motion/react";
-import { createClient } from "@/utils/supabase/client";
 
 // This is sample data.
 const data = {
@@ -39,31 +29,6 @@ const data = {
 };
 
 export function AppSidebar({ ...props }: React.ComponentProps<typeof Sidebar>) {
-  const [isSidebarOpen, setIsSidebarOpen] = useState(true);
-  const [user, setUser] = useState<any | null>(null);
-  const { toggleSidebar } = useSidebar();
-
-  useEffect(() => {
-    const supabase = createClient();
-
-    const fetchUser = async () => {
-      const { data, error } = await supabase.auth.getUser();
-      if (error) {
-        console.error("Error fetching user:", error.message);
-      } else {
-        setUser(data.user);
-      }
-    };
-
-    fetchUser();
-  }, []);
-
-  const userDetails = {
-    name: user?.user_metadata?.name || user?.user_metadata?.full_name || "User",
-    email: user?.user_metadata?.email || user?.email,
-    avatar: user?.user_metadata?.avatar_url || user?.user_metadata?.picture,
-  };
-
   return (
     <Sidebar collapsible="offcanvas" {...props}>
       <SidebarContent className="pt-16">
@@ -72,9 +37,7 @@ export function AppSidebar({ ...props }: React.ComponentProps<typeof Sidebar>) {
         </Suspense>
       </SidebarContent>
       <SidebarFooter>
-        <Suspense fallback={<NavUserSkeleton />}>
-          <NavUser user={userDetails} />
-        </Suspense>
+        <NavUser />
       </SidebarFooter>
       <SidebarRail />
     </Sidebar>

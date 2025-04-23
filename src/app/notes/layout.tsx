@@ -1,3 +1,5 @@
+import { NavUser } from "@/components/nav-user";
+
 export default function Layout({ children }: { children: React.ReactNode }) {
   return (
     <main className="w-full">
@@ -5,6 +7,9 @@ export default function Layout({ children }: { children: React.ReactNode }) {
         <h2 className="text-2xl font-bold">quill</h2>
       </nav>
       {children}
+      <footer className="bg-transparent flex items-center gap-3 p-4 fixed z-10 bottom-0 left-0">
+        <NavUser />
+      </footer>
     </main>
   );
 }

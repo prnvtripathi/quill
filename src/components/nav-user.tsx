@@ -1,14 +1,7 @@
 "use client";
 
-import {
-  ChevronsUpDown,
-  Settings,
-  LogOut,
-  Moon,
-  Sun,
-  User,
-} from "lucide-react";
-import { useTheme } from "next-themes";
+import { useEffect, useState } from "react";
+import { createClient } from "@/utils/supabase/client";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import {
   DropdownMenu,
@@ -22,132 +15,178 @@ import {
   DropdownMenuSubTrigger,
   DropdownMenuSubContent,
 } from "@/components/ui/dropdown-menu";
-import {
-  SidebarMenu,
-  SidebarMenuButton,
-  SidebarMenuItem,
-  useSidebar,
-} from "@/components/ui/sidebar";
+import { LogOut, Sun, Moon, Monitor } from "lucide-react";
+import { useTheme } from "next-themes";
 import { logout } from "@/lib/actions";
-import { useRouter } from "next/navigation";
+import { motion } from "framer-motion";
+import { cn } from "@/lib/utils";
 
-export function NavUser({
-  user,
-}: {
-  user: {
-    name: string;
-    email: string;
-    avatar: string;
+export function NavUser() {
+  const [user, setUser] = useState<any | null>(null);
+  const [isHovered, setIsHovered] = useState(false);
+  const { theme, setTheme } = useTheme();
+  const [mounted, setMounted] = useState(false);
+
+  // Handle hydration
+  useEffect(() => {
+    setMounted(true);
+  }, []);
+
+  useEffect(() => {
+    const supabase = createClient();
+
+    const fetchUser = async () => {
+      const { data, error } = await supabase.auth.getUser();
+      if (!error && data?.user) {
+        setUser(data.user);
+      }
+    };
+
+    fetchUser();
+
+    // Set up subscription for auth changes
+    const { data: authListener } = supabase.auth.onAuthStateChange(
+      (event, session) => {
+        if (event === "SIGNED_IN" && session?.user) {
+          setUser(session.user);
+        } else if (event === "SIGNED_OUT") {
+          setUser(null);
+        }
+      }
+    );
+
+    return () => {
+      authListener.subscription.unsubscribe();
+    };
+  }, []);
+
+  const userDetails = {
+    name: user?.user_metadata?.name || user?.user_metadata?.full_name || "User",
+    email: user?.user_metadata?.email || user?.email,
+    avatar: user?.user_metadata?.avatar_url || user?.user_metadata?.picture,
   };
-}) {
-  const { isMobile } = useSidebar();
-  const { setTheme } = useTheme();
-  const router = useRouter();
+
+  const getFirstLetter = (name: string) => {
+    return name.charAt(0).toUpperCase();
+  };
+
+  if (!mounted) return null;
 
   return (
-    <SidebarMenu>
-      <SidebarMenuItem>
-        <DropdownMenu>
-          <DropdownMenuTrigger asChild>
-            <SidebarMenuButton
-              size="lg"
-              className="data-[state=open]:bg-sidebar-accent data-[state=open]:text-sidebar-accent-foreground"
-            >
-              <Avatar className="h-8 w-8 rounded-lg">
-                <AvatarImage src={user.avatar} alt={user.name} />
-                <AvatarFallback className="rounded-lg">U</AvatarFallback>
-              </Avatar>
-              <div className="grid flex-1 text-left text-sm leading-tight">
-                <span className="truncate font-semibold">{user.name}</span>
-                <span className="truncate text-xs">{user.email}</span>
-              </div>
-              <ChevronsUpDown className="ml-auto size-4" />
-            </SidebarMenuButton>
-          </DropdownMenuTrigger>
-          <DropdownMenuContent
-            className="w-[--radix-dropdown-menu-trigger-width] min-w-56 rounded-lg"
-            side={isMobile ? "bottom" : "right"}
-            align="end"
-            sideOffset={4}
+    <div className="fixed bottom-4 right-4 z-50">
+      <DropdownMenu>
+        <DropdownMenuTrigger asChild>
+          <motion.button
+            className={cn(
+              "flex items-center gap-2 rounded-full shadow",
+              "backdrop-blur-md px-2 py-1",
+              "dark:bg-slate-800/90 dark:text-slate-100 dark:hover:bg-slate-700/90",
+              "light:bg-white/90 light:text-slate-900 light:hover:bg-slate-100/90",
+              "transition-all duration-300"
+            )}
+            onHoverStart={() => setIsHovered(true)}
+            onHoverEnd={() => setIsHovered(false)}
+            transition={{ duration: 0.2 }}
           >
-            <DropdownMenuLabel className="p-0 font-normal">
-              <div className="flex items-center gap-2 px-1 py-1.5 text-left text-sm">
-                <Avatar className="h-8 w-8 rounded-lg">
-                  <AvatarImage src={user.avatar} alt={user.name} />
-                  <AvatarFallback className="rounded-lg">U</AvatarFallback>
-                </Avatar>
-                <div className="grid flex-1 text-left text-sm leading-tight">
-                  <span className="truncate font-semibold">{user.name}</span>
-                  <span className="truncate text-xs">{user.email}</span>
-                </div>
-              </div>
-            </DropdownMenuLabel>
-            <DropdownMenuSeparator />
-            <DropdownMenuGroup>
-              <DropdownMenuItem
-                onClick={() => router.push("/profile")}
-                className="cursor-pointer"
-              >
-                <User className="mr-2 h-4 w-4" />
-                Profile
-              </DropdownMenuItem>
-              <DropdownMenuItem
-                onClick={() => router.push("/settings")}
-                className="cursor-pointer"
-              >
-                <Settings className="mr-2 h-4 w-4" />
-                Settings
-              </DropdownMenuItem>
-              <DropdownMenuSub>
-                <DropdownMenuSubTrigger>
-                  <span className="flex items-center">
-                    <Sun className="text-gray-800 mr-2 h-4 w-4 rotate-0 scale-100 transition-all dark:-rotate-90 dark:scale-0" />
-                    <Moon className="text-gray-400 absolute mr-2 h-4 w-4 rotate-90 scale-0 transition-all dark:rotate-0 dark:scale-100" />
-                    <span className="ml-2">Toggle Theme</span>
-                  </span>
-                </DropdownMenuSubTrigger>
-                <DropdownMenuSubContent>
-                  <DropdownMenuItem onClick={() => setTheme("light")}>
-                    Light
-                  </DropdownMenuItem>
-                  <DropdownMenuItem onClick={() => setTheme("dark")}>
-                    Dark
-                  </DropdownMenuItem>
-                  <DropdownMenuItem onClick={() => setTheme("system")}>
-                    System
-                  </DropdownMenuItem>
-                </DropdownMenuSubContent>
-              </DropdownMenuSub>
-            </DropdownMenuGroup>
-            <DropdownMenuSeparator />
-            <DropdownMenuItem onClick={logout} className="cursor-pointer">
-              <LogOut className="mr-2 h-4 w-4" />
-              Log out
-            </DropdownMenuItem>
-          </DropdownMenuContent>
-        </DropdownMenu>
-      </SidebarMenuItem>
-    </SidebarMenu>
-  );
-}
+            <Avatar className="h-8 w-8 ring-1 ring-offset-1 dark:ring-slate-600 dark:ring-offset-slate-800 light:ring-slate-200 light:ring-offset-white">
+              <AvatarImage src={userDetails.avatar} alt={userDetails.name} />
+              <AvatarFallback className="bg-gradient-to-br from-indigo-500 to-purple-600 text-white">
+                {getFirstLetter(userDetails.name)}
+              </AvatarFallback>
+            </Avatar>
 
-export function NavUserSkeleton() {
-  return (
-    <SidebarMenu>
-      <SidebarMenuItem>
-        <SidebarMenuButton
-          size="lg"
-          className="data-[state=open]:bg-sidebar-accent data-[state=open]:text-sidebar-accent-foreground"
+            <motion.div
+              className="overflow-hidden"
+              initial={false}
+              animate={{
+                width: isHovered ? "auto" : 0,
+                opacity: isHovered ? 1 : 0,
+              }}
+              transition={{ duration: 0.2 }}
+            >
+              <div className="flex flex-col text-left leading-tight pr-2 whitespace-nowrap">
+                <span className="font-medium text-sm">{userDetails.name}</span>
+                <span className="text-xs opacity-70">{userDetails.email}</span>
+              </div>
+            </motion.div>
+          </motion.button>
+        </DropdownMenuTrigger>
+
+        <DropdownMenuContent
+          align="end"
+          className="min-w-56 rounded-lg p-1 dark:bg-slate-800 dark:border-slate-700"
         >
-          <Avatar className="h-8 w-8 rounded-lg">
-            <AvatarFallback className="rounded-lg">U</AvatarFallback>
-          </Avatar>
-          <div className="grid flex-1 text-left text-sm leading-tight">
-            <span className="truncate font-semibold">Loading...</span>
-            <span className="truncate text-xs">Loading...</span>
-          </div>
-        </SidebarMenuButton>
-      </SidebarMenuItem>
-    </SidebarMenu>
+          <DropdownMenuLabel className="p-0 font-normal">
+            <div className="flex items-center gap-3 p-3">
+              <Avatar className="h-10 w-10 rounded-lg">
+                <AvatarImage src={userDetails.avatar} alt={userDetails.name} />
+                <AvatarFallback className="bg-gradient-to-br from-indigo-500 to-purple-600 text-white">
+                  {getFirstLetter(userDetails.name)}
+                </AvatarFallback>
+              </Avatar>
+              <div className="text-sm leading-tight">
+                <p className="font-semibold mb-0.5">{userDetails.name}</p>
+                <p className="text-xs opacity-70">{userDetails.email}</p>
+              </div>
+            </div>
+          </DropdownMenuLabel>
+
+          <DropdownMenuSeparator className="dark:bg-slate-700" />
+
+          <DropdownMenuGroup>
+            <DropdownMenuSub>
+              <DropdownMenuSubTrigger>
+                <div className="flex items-center">
+                  {theme === "dark" ? (
+                    <Moon className="mr-2 h-4 w-4" />
+                  ) : theme === "light" ? (
+                    <Sun className="mr-2 h-4 w-4" />
+                  ) : (
+                    <Monitor className="mr-2 h-4 w-4" />
+                  )}
+                  Theme
+                </div>
+              </DropdownMenuSubTrigger>
+
+              <DropdownMenuSubContent className="min-w-32 p-1 dark:bg-slate-800 dark:border-slate-700">
+                <DropdownMenuItem onClick={() => setTheme("light")}>
+                  <Sun className="mr-2 h-4 w-4" />
+                  Light
+                  {theme === "light" && (
+                    <span className="ml-auto h-1.5 w-1.5 rounded-full bg-green-500" />
+                  )}
+                </DropdownMenuItem>
+
+                <DropdownMenuItem onClick={() => setTheme("dark")}>
+                  <Moon className="mr-2 h-4 w-4" />
+                  Dark
+                  {theme === "dark" && (
+                    <span className="ml-auto h-1.5 w-1.5 rounded-full bg-green-500" />
+                  )}
+                </DropdownMenuItem>
+
+                <DropdownMenuItem onClick={() => setTheme("system")}>
+                  <Monitor className="mr-2 h-4 w-4" />
+                  System
+                  {theme === "system" && (
+                    <span className="ml-auto h-1.5 w-1.5 rounded-full bg-green-500" />
+                  )}
+                </DropdownMenuItem>
+              </DropdownMenuSubContent>
+            </DropdownMenuSub>
+          </DropdownMenuGroup>
+
+          <DropdownMenuSeparator className="dark:bg-slate-700" />
+
+          <DropdownMenuItem
+            onClick={logout}
+            className="text-red-500 dark:text-red-400 focus:text-red-500 dark:focus:text-red-400"
+          >
+            <LogOut className="mr-2 h-4 w-4" />
+            Log out
+          </DropdownMenuItem>
+        </DropdownMenuContent>
+      </DropdownMenu>
+    </div>
   );
 }

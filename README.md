@@ -55,8 +55,8 @@ A modern, full-stack **Notes Application** built with **Next.js (App Router + Ty
 ### 1. Clone the repository
 
 ```bash
-git clone https://github.com/your-username/ai-notes-app.git
-cd ai-notes-app
+git clone https://github.com/prnvtripathi/quill.git
+cd quill
 ```
 
 ### 2. Install dependencies
